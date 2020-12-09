@@ -14,7 +14,7 @@ class InventorySystem:
         f = open(self.manufacturer_filename, 'r')
         reader = csv.reader(f)
         for row in reader:
-            self.items[row[0]] = {'Item Manufacturer': row[1], 'Item Type': row[2]}
+            self.items[row[0]] = {'Item Manufacturer': row[1], 'Item Type': row[2], 'Damage Indicator': row[3]}
         print(self.items)
         f.close()
 
@@ -27,6 +27,7 @@ class InventorySystem:
                     print("match")
                     self.items[row[0]].update({'Price': row[1]})
         print(self.items)
+        f.close()
 
 
 if __name__ == '__main__':
