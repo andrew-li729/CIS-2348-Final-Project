@@ -134,9 +134,9 @@ class InventorySystem:
 
         for item in damaged_list:
             price_list.append(self.items[item]["Price"])
-        print(damaged_list)
+        # print(damaged_list)
         price_list.sort(reverse=True)
-        print(price_list)
+        # print(price_list)
 
         with open("DamagedInventory.csv", 'w') as f:
             w = csv.writer(f, lineterminator="\n")
@@ -151,10 +151,14 @@ class InventorySystem:
 if __name__ == '__main__':
     x = InventorySystem(manufacturer_filename="ManufacturerList.csv", price_list_filename="PriceList.csv",
                         service_filename="ServiceDatesList.csv")
+
+    # this part combines the three input files into one output FullInventory.csv file
     x.get_manufacturer_list()
     x.append_price_list()
     x.append_service_date_list()
     x.write_full_inv_file()
+
+    # this part outputs item type files, past service file, and damaged inventory file
     x.item_type_inventory_file()
     x.write_past_service_date_file()
     x.write_damaged_inventory_file()
