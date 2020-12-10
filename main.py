@@ -5,7 +5,7 @@ from datetime import datetime
 
 
 class InventorySystem:
-    def __init__(self, manufacturer_filename="ManufacturerList.csv", price_list_filename="none",
+    def __init__(self, manufacturer_filename="none", price_list_filename="none",
                  service_filename="none"):
         self.manufacturer_filename = manufacturer_filename
         self.price_filename = price_list_filename
@@ -13,6 +13,8 @@ class InventorySystem:
         self.items = {}
 
     def get_manufacturer_list(self):
+        # initiates dictionary for items in manufacturerList.csv
+        # item IDs will be keys and its attributes will be its value in a nested dictionary
         f = open(self.manufacturer_filename, 'r')
         reader = csv.reader(f)
         for row in reader:
