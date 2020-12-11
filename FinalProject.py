@@ -273,6 +273,7 @@ if __name__ == '__main__':
     x.write_past_service_date_file()
     x.write_damaged_inventory_file()
 
+    # this part executes function to leave only valid item ids for query use (not past service date or damaged)
     x.valid_items()
 
     option = ""
