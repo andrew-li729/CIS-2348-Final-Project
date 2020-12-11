@@ -65,6 +65,7 @@ class InventorySystem:
                              self.items[key]["Price"], self.items[key]["Service Date"],
                              self.items[key]["Damage Indicator"]]
                         w.writerow(t)
+        return manufacturers_list
 
     def item_type_inventory_file(self):
         # get item ids and sort
@@ -91,9 +92,10 @@ class InventorySystem:
                              self.items[item_id]["Price"], self.items[item_id]["Service Date"],
                              self.items[item_id]["Damage Indicator"]]
                         w.writerow(t)
+        return item_ids_sorted
 
     def write_past_service_date_file(self):
-        # gets current date
+        # gets current date from system
         now = datetime.now()
 
         # get item ids from items dict
@@ -107,8 +109,8 @@ class InventorySystem:
 
         # removes service date from dates_list if it has passed when program is executed
         for date in dates_list:
-            date_compare = datetime.strptime(date, '%m/%d/%Y')
-            if date_compare > now:
+            date_compare = datetime.strptime(date, '%m/%d/%Y')  # converts item service date from str to date format
+            if date_compare > now:  # compares item service date and system date
                 dates_list.remove(date)
 
         # sorts dates list
@@ -124,6 +126,7 @@ class InventorySystem:
                              self.items[key]["Price"], self.items[key]["Service Date"],
                              self.items[key]["Damage Indicator"]]
                         w.writerow(t)
+        return dates_list
 
     def write_damaged_inventory_file(self):
         item_ids = self.items.keys()
@@ -148,6 +151,111 @@ class InventorySystem:
                         t = [item, self.items[item]['Item Manufacturer'], self.items[item]['Item Type'],
                              self.items[item]['Price'], self.items[item]['Service Date']]
                         w.writerow(t)
+        return damaged_list
+
+    def valid_items(self):
+        # this function takes full list of item ids and removes ids that are past service date or damaged
+        # gets relevant lists from previous functions
+        full_item_ids = self.item_type_inventory_file()
+        past_service_date_list = self.write_past_service_date_file()
+        damaged_item_ids = self.write_damaged_inventory_file()
+
+        # remove damaged ids from list
+        for item_id in damaged_item_ids:
+            if item_id in full_item_ids:
+                full_item_ids.remove(item_id)
+
+        # remove past service date ids
+        for date in past_service_date_list:
+            for key in full_item_ids:
+                if self.items[key]["Service Date"] == date:
+                    # print(self.items[key]["Service Date"])
+                    full_item_ids.remove(key)
+        return full_item_ids
+
+    def query_system(self):
+        # get user input to search dict with
+        search = input("Enter Item: ")
+
+        # splits search string into a list
+        search_split = search.split()
+
+        # gets manufacturers list and item_ids list from previous functions
+        manufacturers_list = self.write_full_inv_file()
+        item_ids = self.valid_items()
+
+        # creates list without duplicates of all item types from full inventory
+        item_types = []
+        for key in self.items:
+            if self.items[key]["Item Type"] not in item_types:
+                item_types.append(self.items[key]["Item Type"])
+
+        # initialize variables used for manufacturer name user input validation
+        manufacturer_keyword = None
+        manu_flag = False
+        count = 0
+
+        # checks if user input has matching value in manufacturers list
+        for manufacturer in manufacturers_list:
+            if manufacturer in search_split:
+                manu_flag = True
+                manufacturer_keyword = manufacturer
+                count += 1
+                if count > 1:
+                    print("ERROR: Please enter only 1 manufacturer\n")
+                    manu_flag = False
+                    manufacturer_keyword = None
+                    break
+
+        # initializes variables used for item type user input validation
+        type_keyword = None
+        item_flag = False
+        count = 0
+
+        # checks if user input has matching value in item types list
+        for item in item_types:
+            if item in search_split:
+                item_flag = True
+                type_keyword = item
+                count += 1
+                if count > 1:
+                    print("ERROR: Please enter only 1 item type")
+                    item_flag = False
+                    type_keyword = None
+                    break
+
+        # print(manufacturer_keyword, manu_flag)  # for debugging
+        # print(type_keyword, item_flag)
+
+        # if both manufacturer and item input checks are true, take user input and find valid matching item from
+        # remaining valid item ids (not damaged or past service date)
+        if manu_flag and item_flag:
+            for key in item_ids:
+                if self.items[key]["Item Manufacturer"] == manufacturer_keyword \
+                        and self.items[key]["Item Type"] == type_keyword:
+                    print("Your item is: {} {} {} ${} \n".format(key,
+                                                                 self.items[key]["Item Manufacturer"],
+                                                                 self.items[key]["Item Type"],
+                                                                 self.items[key]["Price"]))
+
+                    for key2 in item_ids:  # checks item ids for similar items within price range of 20%
+                        # print(key2)
+                        if type_keyword == self.items[key2]["Item Type"] and key != key2:
+                            item_price = float(self.items[key]["Price"])
+                            alt_item_price = float(self.items[key2]["Price"])
+                            # print(item_price, alt_item_price)
+
+                            item_price_low = item_price - item_price * 0.2
+                            item_price_hi = item_price + item_price * 0.2
+                            # print(item_price_low, item_price_hi)
+
+                            if item_price_low <= alt_item_price <= item_price_hi:
+                                print("You may also consider: {} {} {} ${}\n".
+                                      format(key2, self.items[key2]["Item Manufacturer"], self.items[key2]["Item Type"],
+                                             self.items[key2]["Price"]))
+
+        else:
+            print("Item not found in stock.\n")
 
 
 if __name__ == '__main__':
@@ -164,3 +272,16 @@ if __name__ == '__main__':
     x.item_type_inventory_file()
     x.write_past_service_date_file()
     x.write_damaged_inventory_file()
+
+    x.valid_items()
+
+    option = ""
+
+    while option != "q":
+        print("MENU")
+        print("a - Query Item")
+        print("q - Quit")
+        option = input("Choose an option: \n")
+
+        if option == "a":
+            x.query_system()
